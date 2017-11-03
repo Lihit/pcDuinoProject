@@ -25,15 +25,15 @@ def RecogniseFace(faceInput, FacesLabelPredicted=None):
     if FaceNum == 0:
         print("没有检测出来人脸")
         return resultDict
-    UnknownFaces_encoding = fr.face_encodings(faceOutput,UnknownFaces_location)
+    UnknownFaces_encoding = fr.face_encodings(faceOutput, UnknownFaces_location)
     '''
     对检测出来的人脸进行识别
     '''
-    imagesDir = 'KnownFaces'  # 已识别人脸的数据库
+    imagesDir = os.path.join('FaceRecognition', 'KnownFaces')  # 已识别人脸的数据库
     resultDict = {tuple(position): 'unknown' for position in UnknownFaces_location}
     for filename in os.listdir(imagesDir):
         filepath = os.path.join(imagesDir, filename)
-        #print(filepath)
+        # print(filepath)
         known_img = fr.load_image_file(filepath)
         known_encoding = fr.face_encodings(known_img)[0]
         index_reco = []
@@ -58,7 +58,7 @@ def saveNewFace(faceInput, newName):
     :return: ret bool如果保存成功则返回True
     '''
     ret = False
-    newFace=faceInput.copy()
+    newFace = faceInput.copy()
     if newFace is not None and newName is not None:
         faces_location = fr.face_locations(newFace)
         if len(faces_location) < 1:
@@ -69,17 +69,17 @@ def saveNewFace(faceInput, newName):
             return ret
         imagesDir = 'KnownFaces'
         try:
-            top = max(faces_location[0][0]-20,0)
-            right = min(faces_location[0][1]+20,newFace.shape[0])
-            bottom = min(faces_location[0][2]+20,newFace.shape[1])
-            left = max(faces_location[0][3]-20,0)
-            #print(os.path.join(imagesDir, newName) + '.jpg')
+            top = max(faces_location[0][0] - 20, 0)
+            right = min(faces_location[0][1] + 20, newFace.shape[0])
+            bottom = min(faces_location[0][2] + 20, newFace.shape[1])
+            left = max(faces_location[0][3] - 20, 0)
+            # print(os.path.join(imagesDir, newName) + '.jpg')
             # print(type(newFace))
             # print(newFace[top:bottom, left:right])
-            face=newFace[top:bottom, left:right]
+            face = newFace[top:bottom, left:right]
             (r, g, b) = cv2.split(face)
             face = cv2.merge([b, g, r])
-            cv2.imwrite(os.path.join('FaceRecognition','KnownFaces',newName) + '.jpg', face)
+            cv2.imwrite(os.path.join('FaceRecognition', 'KnownFaces', newName) + '.jpg', face)
             ret = True
         except Exception as e:
             print(e)
