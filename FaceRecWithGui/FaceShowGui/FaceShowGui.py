@@ -1,4 +1,8 @@
-# coding=utf-8
+#-*- coding:utf-8 -*-
+'''
+author:wenshao
+time:2017-11-3
+'''
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import *
@@ -7,6 +11,9 @@ import numpy as np
 import face_recognition as fr
 import cv2
 from FaceRecWithGui.FaceRecognition.FaceRecognition import saveNewFace, RecogniseFace
+from socket import *
+import json
+from datetime import datetime
 
 
 class MyWindow(QWidget):
@@ -25,6 +32,10 @@ class MyWindow(QWidget):
         self.WinHeight = WinHeight
         self.currentFrame = None
         self.newName = None
+        #建立一个udp套接字，建识别出来的人脸发送到服务器
+        self.dstIP=''
+        self.dstPort=8899
+        self.UdpSocket=socket(AF_INET,SOCK_DGRAM)
         self.initUI()
 
     def initUI(self):
@@ -80,13 +91,19 @@ class MyWindow(QWidget):
         elif source.text() == '开始识别':
             resultDict = RecogniseFace(self.currentFrame)
             recoNames = []
-            for value in resultDict.values():
+            sendList=[]
+            for key,value in resultDict.items():
                 if value == 'unknown':
                     continue
+                (top,right,bottom,left)=key
+                sendList.append([value,str(datetime.now())])
                 recoNames.append(value)
             if len(recoNames) == 0:
                 reply = QMessageBox.question(self, 'Warning', '无法识别人脸，请重新识别！', QMessageBox.Yes)
             else:
+                sendList_json=json.dumps(sendList)
+                print(sendList_json)
+                self.UdpSocket.sendto(sendList_json.encode('utf-8'),(self.dstIP,self.dstPort))
                 showText = '\n'.join(i + ',欢迎你！' for i in recoNames)
                 reply = QMessageBox.question(self, 'Info', showText, QMessageBox.Yes)
         elif source.text() == '暂停':

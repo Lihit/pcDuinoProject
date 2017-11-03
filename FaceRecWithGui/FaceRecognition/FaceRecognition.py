@@ -1,4 +1,8 @@
-# coding=utf-8
+#-*- coding:utf-8 -*-
+'''
+author:wenshao
+time:2017-11-3
+'''
 import face_recognition as fr
 import cv2
 import os

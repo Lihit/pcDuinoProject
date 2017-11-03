@@ -1,3 +1,8 @@
+#-*- coding:utf-8 -*-
+'''
+author:wenshao
+time:2017-11-3
+'''
 import cv2
 import skvideo.io
 import time
