@@ -142,7 +142,7 @@ class MyWindow(QWidget):
             self.count += 1
             self.currentFrame = frame.copy()
             # frame=np.array(frame,dtype=np.uint8)
-            if self.count % 3 == 0:
+            if self.count % 5 == 0:
                 self.face_locations = self.DetectFace(frame)
             frame = self.DrawFaces(frame, self.face_locations)
             height, width, bytesPerComponent = frame.shape

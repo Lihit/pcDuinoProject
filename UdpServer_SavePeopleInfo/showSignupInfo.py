@@ -24,7 +24,7 @@ class MyThread(QThread):
                 fileData = []
                 if not os.path.exists(filePath):
                     print('文件不存在')
-                    break
+                    continue
                 #mtime = time.ctime(os.path.getmtime(filePath))
                 if os.access(filePath, os.R_OK):
                     with open(filePath, 'r') as f:
@@ -46,20 +46,20 @@ class TableSheet(QWidget):
     def __init__(self):
         super().__init__()
         self.initUi()
-        for i in range(3):
+        for i in range(2):
             #contentList = ['Tag%d' % i, 'CheckIn', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())]
-            contentList = ['', '', '']
-            rowCOunt = self.table.rowCount()
-            self.insertNewRow(contentList, rowCOunt)
+            contentList = ['', '']
+            rowCount = self.table.rowCount()
+            self.insertNewRow(contentList, rowCount)
 
     def initUi(self):
         self.resize(1000, 510)
-        horizontalHeader = ["TagName", "Status", "TimeStamp"]
+        horizontalHeader = ["Name","TimeStamp"]
         self.setWindowTitle('MyTable')
         self.table = QTableWidget()
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
-        self.table.setColumnCount(3)
+        self.table.setColumnCount(2)
         # self.table.setRowCount(3)
         self.table.setHorizontalHeaderLabels(horizontalHeader)
         # self.table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -77,8 +77,8 @@ class TableSheet(QWidget):
         self.setLayout(mainLayout)
 
     def insertNewRow(self, contentList, insertRow):
-        if len(contentList) != 3:
-            contentList = ['', '', '']
+        if len(contentList) != 2:
+            contentList = ['', '']
         self.table.insertRow(insertRow)
         self.table.setRowHeight(insertRow, 150)
         for index in range(len(contentList)):
@@ -88,8 +88,8 @@ class TableSheet(QWidget):
             self.table.setItem(insertRow, index, newItem)
 
     def changeRowContent(self, NewContentList, insertRow):
-        if len(NewContentList) != 3:
-            NewContentList = ['', '', '']
+        if len(NewContentList) != 2:
+            NewContentList = ['', '']
         if insertRow >= self.table.rowCount():
             insertRow = self.table.rowCount()
             self.table.insertRow(insertRow)
@@ -103,10 +103,6 @@ class TableSheet(QWidget):
     def handleDisplay(self, data):
         if len(data):
             for i in range(len(data)):
-                if float(data[i][1].strip()) > 0:
-                    data[i][1] = 'CheckIn'
-                else:
-                    data[i][1] = 'CheckOut'
                 self.changeRowContent(data[i], i)
 
 
@@ -124,28 +120,8 @@ def ShowGUI():
         print(e)
 
 
-def writeFile():
-    count = 0
-    while True:
-        if os.access('myfile.txt', os.W_OK):
-            with open('myfile.txt', 'w') as fp:
-                for i in range(3):
-                    fp.write('Tag%i' % random.randint(0, 100) + ',' + str(random.random() - 0.5) +
-                             ',' + str(time.strftime("%H:%M:%S", time.localtime())) + '\n')
-        print(count)
-        count += 1
-        if count > 20:
-            break
-        time.sleep(1)
-
-
 def main():
-    ShowGUI_process = Process(target=ShowGUI)
-    writeFile_process = Process(target=writeFile)
-    ShowGUI_process.start()
-    writeFile_process.start()
-    ShowGUI_process.join()
-    writeFile_process.join()
+    ShowGUI()
 
 if __name__ == '__main__':
     main()
