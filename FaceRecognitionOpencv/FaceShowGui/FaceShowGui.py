@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 '''
 author:wenshao
 time:2017-11-3
@@ -6,16 +6,12 @@ time:2017-11-3
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import *
-import sys
-import numpy as np
-import face_recognition as fr
 import cv2
-from FaceRecognition.FaceRecognition import saveNewFace, RecogniseFace
+from FaceRecognition.FaceRecognition import saveNewFace, RecogniseFace, train
 from socket import *
 import json
 from datetime import datetime
-
-
+from configure import config
 
 
 class MyWindow(QWidget):
@@ -28,6 +24,7 @@ class MyWindow(QWidget):
         :param WinHeight: 窗口的高
         '''
         super(QWidget, self).__init__()
+        train()
         self.count = 0
         self.face_locations = None
         self.WinWidth = WinWidth
@@ -35,8 +32,8 @@ class MyWindow(QWidget):
         self.currentFrame = None
         self.newName = None
         # 建立一个udp套接字，建识别出来的人脸发送到服务器
-        self.dstIP = ''
-        self.dstPort = 8899
+        self.dstIP = config.IP
+        self.dstPort = config.PORT
         self.UdpSocket = socket(AF_INET, SOCK_DGRAM)
         self.initUI()
 
@@ -88,6 +85,13 @@ class MyWindow(QWidget):
                 if ret:
                     reply = QMessageBox.question(
                         self, 'Info', '人脸录入成功', QMessageBox.Yes)
+                    send_json = json.dumps(
+                        [0, self.newName, str(datetime.now())])
+                    print('input face:' + send_json)
+                    self.UdpSocket.sendto(send_json.encode(
+                        'utf-8'), (self.dstIP, self.dstPort))
+                    print('Retrain the model...')
+                    train()
                 else:
                     reply = QMessageBox.question(
                         self, 'Warning', '人脸录入失败，请重新录入！', QMessageBox.Yes)
@@ -99,17 +103,17 @@ class MyWindow(QWidget):
                 if value == 'unknown':
                     continue
                 (top, right, bottom, left) = key
-                sendList.append([value, str(datetime.now())])
+                sendList.append([1, value, str(datetime.now())])  # 1代表的是识别
                 recoNames.append(value)
             if len(recoNames) == 0:
                 reply = QMessageBox.question(
                     self, 'Warning', '无法识别人脸，请重新识别！', QMessageBox.Yes)
             else:
                 sendList_json = json.dumps(sendList)
-                print(sendList_json)
+                print('reco face:' + sendList_json)
                 self.UdpSocket.sendto(sendList_json.encode(
                     'utf-8'), (self.dstIP, self.dstPort))
-                showText = '\n'.join(i + ',欢迎你！' for i in recoNames)
+                showText = '\n'.join('hello,' + i for i in recoNames)
                 reply = QMessageBox.question(
                     self, 'Info', showText, QMessageBox.Yes)
         elif source.text() == u'暂停':
@@ -127,33 +131,12 @@ class MyWindow(QWidget):
             #     self.stopBtn.setText('暂停')
             #     self.stopFlag.emit(0)
 
-    def DetectFace(self, frame):
-        face_locations = fr.face_locations(frame)
-        #print(face_locations)
-        return face_locations
-
-    def DrawFaces(self, frame, face_locations):
-        if face_locations is None:
-            return frame
-        faceNum = len(face_locations)
-        for i in range(faceNum):
-            x = face_locations[i][0]
-            y = face_locations[i][1]
-            w = face_locations[i][2]
-            h = face_locations[i][3]
-            cv2.rectangle(frame, (x, y),
-                          (x + w, y + h), (255, 255, 0), 2)
-        return frame
-
     def handleDisplay(self, frame):
         if len(frame):
             self.count += 1
             [b, g, r] = cv2.split(frame)
             frame = cv2.merge([r, g, b])
             self.currentFrame = frame.copy()
-            if self.count%4==0:
-                self.face_locations = self.DetectFace(frame)
-            frame = self.DrawFaces(frame, self.face_locations)
             height, width, bytesPerComponent = frame.shape
             self.resize(width + 40, height + 70)
             bytesPerLine = 3 * width
@@ -180,7 +163,7 @@ class PhotoShowGui(QWidget):
     def __init__(self, frame, WinWidth=800, WinHeight=600):
         super(QWidget, self).__init__()
         if frame is None:
-            print('传入的frame无效')
+            print(u'传入的frame无效')
             self.close()
         self.saveFrame = frame.copy()
         self.WinWidth = frame.shape[1] + 40

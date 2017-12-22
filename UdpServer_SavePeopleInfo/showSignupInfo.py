@@ -17,14 +17,25 @@ class MyThread(QThread):
     updateData = pyqtSignal(list)
 
     def run(self):
-        filePath = 'myfile.txt'
+        recorderDirs = [i for i in os.listdir('./') if os.path.isdir(i)]
+        for index, dirname in enumerate(recorderDirs):
+            print('%d->%s\n' % (index, dirname))
+        dirindex = input('input a number to choose a dir:')
+        dirname_show = recorderDirs[int(dirindex)]
+        recorderFiles = [i for i in os.listdir(dirname_show)]
+        for index, filename in enumerate(recorderFiles):
+            print('%d->%s\n' % (index, filename))
+        fileindex = input('input a number to choose a file:')
+        filename_show = recorderFiles[int(fileindex)]
+        filePath = os.path.join(dirname_show, filename_show)
+        print(filePath)
         modifyTime = -1
         try:
             while True:
                 fileData = []
                 if not os.path.exists(filePath):
                     print('文件不存在')
-                    continue
+                    break
                 #mtime = time.ctime(os.path.getmtime(filePath))
                 if os.access(filePath, os.R_OK):
                     with open(filePath, 'r') as f:
@@ -54,7 +65,7 @@ class TableSheet(QWidget):
 
     def initUi(self):
         self.resize(1000, 510)
-        horizontalHeader = ["Name","TimeStamp"]
+        horizontalHeader = ["Name", "TimeStamp"]
         self.setWindowTitle('MyTable')
         self.table = QTableWidget()
         self.table.resizeColumnsToContents()
@@ -95,7 +106,8 @@ class TableSheet(QWidget):
             self.table.insertRow(insertRow)
             self.table.setRowHeight(insertRow, 150)
         for index in range(len(NewContentList)):
-            newItem = QTableWidgetItem(str(NewContentList[index]).replace('\n',''))
+            newItem = QTableWidgetItem(
+                str(NewContentList[index]).replace('\n', ''))
             newItem.setFont(QFont("Roman times", 40, QFont.Bold))
             newItem.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(insertRow, index, newItem)
@@ -103,7 +115,7 @@ class TableSheet(QWidget):
     def handleDisplay(self, data):
         if len(data):
             for i in range(len(data)):
-                self.changeRowContent(data[i], i)
+                self.changeRowContent(data[len(data) - i - 1], i)
 
 
 def ShowGUI():

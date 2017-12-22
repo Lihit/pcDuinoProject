@@ -18,7 +18,7 @@ def RecogniseFace(faceInput, FacesLabelPredicted=None):
     '''
     resultDict = {}
     if faceInput is None:
-        print('传入的图像是None')
+        print('传入的图像是None') 
         return resultDict
     faceOutput = faceInput.copy()
     '''
